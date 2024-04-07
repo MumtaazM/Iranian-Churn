@@ -1,6 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
@@ -210,34 +211,137 @@ for col in numeric_cols:
 
 #Results are extremely low, since the data is skewed and not linearly related it might be inappropriate to use Pearson correlation without transforming the data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
-#DECISION TREE
+
+# DECISION TREE
+
+# this node object represents the node in the tree and keeps track of
+# the predicted class (majority class) in the case of a leaf node
+# the feature and threshold it splitted on
+# the left and right child nodes (sub trees)
+# initially the variables have no values until the tree is built with all it's nodes
+class Node:
+    def __init__(self, predicted_class):
+        self.predicted_class = predicted_class
+        self.feature_index = None
+        self.threshold = None
+        self.left = None
+        self.right = None
+
+# Calculates the Gini impurity of the input array y. This represents the probability
+# of misclassifying a randomly chosen element in y if it were randomly labeled
+# according to the class distribution in y.
+def gini(y):
+    classes, counts = np.unique(y, return_counts=True)
+    proba = counts / len(y)
+    return 1 - np.sum(proba ** 2)
+
+# return the subset of the X dataset of independant variables 
+#and the subset of the y dataset of the dependant variable split further into left or right
+# depending on if they meet the threshold condition for left and right
+def split(X, y, index, threshold):
+    left = np.where(X[:, index] < threshold)
+    right = np.where(X[:, index] >= threshold)
+    return X[left], X[right], y[left], y[right]
+
+# returns the best feature/column's index and the best threshold value to split the node at
+# loops through all columns in the X dataset of independant variables and checks all unique values as candiate thresholds
+# whichever one has the best gini index becomes the feature and threshold for the node and therefore returns them
+def best_split(X, y):
+    best_index, best_threshold, best_gini = 0, 0, 1
+    for column_index in range(X.shape[1]):
+        thresholds = np.unique(X[:, column_index])
+        for threshold in thresholds:
+            X_left, X_right, y_left, y_right = split(X, y, column_index, threshold)
+            gini_left, gini_right = gini(y_left), gini(y_right)
+            gini_total = len(y_left) / len(y) * gini_left + len(y_right) / len(y) * gini_right
+            if gini_total < best_gini:
+                best_gini = gini_total
+                best_index = column_index
+                best_threshold = threshold
+    return best_index, best_threshold
+
+# Recursive function to build the decision tree that takes
+# a set of data that contains the independent variables (X)
+# the target variable (y)
+# the current depth of the tree (depth)
+# and the maximum depth of the tree (max_depth)
+def build_tree(X, y, depth=0, max_depth=5):
+    # find the unique class values for the dependant variable (churn) and return the counts for each class and the unique classes
+    classes, counts = np.unique(y, return_counts=True)
+    # If y is empty, return a node with no predicted class
+    if len(counts) == 0:
+        return Node(None)
+    # store the index of the class with the most counts in the predicted class and pass it to the new node object 
+    predicted_class = classes[np.argmax(counts)]
+    node = Node(predicted_class=predicted_class)
+    # check for max depth in each recursive call and stop building the tree when reached
+    if depth < max_depth:
+        index, threshold = best_split(X, y) # returns the best column/feature's index and threshold to split the node at
+        # check for a valid split
+        if index is not None:
+            # splits the node and stores the feature and threshold the node was split at as well as creates the left and right child nodes (sub trees)
+            X_left, X_right, y_left, y_right = split(X, y, index, threshold)
+            node.feature_index = index
+            node.threshold = threshold
+            node.left = build_tree(X_left, y_left, depth + 1, max_depth)
+            node.right = build_tree(X_right, y_right, depth + 1, max_depth)
+    return node
+
+# predicts the class for each instance of x/sample in the test dataset
+def predict(node, X):
+    # Leaf node so it is pure enough and does not split further, return the predicted class
+    if node.left is None:
+        return node.predicted_class
+    # else check whether to go to the left child node or right child node to make a decision
+    if X[node.feature_index] < node.threshold:
+        return predict(node.left, X)
+    else:
+        return predict(node.right, X)
 
 # Split the dataset into features (X) and target (y)
-X = df.drop('Churn', axis=1)
-y = df['Churn']
+X = df.drop('Churn', axis=1).values
+y = df['Churn'].values
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Model Training
-# Initialize the decision tree classifier
-clf = DecisionTreeClassifier(max_depth=8, random_state=42)
+# Build the decision tree and limit to depth of 8 for optimal performance
+tree = build_tree(X_train, y_train, max_depth=8)
 
-# Train the decision tree model
-clf.fit(X_train, y_train)
+# return the predictions for the test dataset in an array
+predictions = [predict(tree, x) for x in X_test]
 
-# Make predictions on the testing set
-y_pred = clf.predict(X_test)
+# takes the average of the predictions that match the actual values in the test dataset to calculate the accuracy
+accuracy = (predictions == y_test).mean()
+print(f'Accuracy: {accuracy}')
 
-# Evaluate the model
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("Classification Report:")
-print(classification_report(y_test, y_pred))
-print("Confusion Matrix:")
-print(confusion_matrix(y_test, y_pred))
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Visualize the decision tree
-plt.figure(figsize=(20,10))
-plot_tree(clf, feature_names=X.columns, class_names=['Not Churn', 'Churn'], filled=True, rounded=True)
-plt.show()
+# # Split the dataset into features (X) and target (y)
+# X = df.drop('Churn', axis=1)
+# y = df['Churn']
+
+# # Split the data into training and testing sets
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# # Model Training
+# # Initialize the decision tree classifier
+# clf = DecisionTreeClassifier(max_depth=8, random_state=42)
+
+# # Train the decision tree model
+# clf.fit(X_train, y_train)
+
+# # Make predictions on the testing set
+# y_pred = clf.predict(X_test)
+
+# # Evaluate the model
+# print("Accuracy:", accuracy_score(y_test, y_pred))
+# print("Classification Report:")
+# print(classification_report(y_test, y_pred))
+# print("Confusion Matrix:")
+# print(confusion_matrix(y_test, y_pred))
+
+# # Visualize the decision tree
+# plt.figure(figsize=(20,10))
+# plot_tree(clf, feature_names=X.columns, class_names=['Not Churn', 'Churn'], filled=True, rounded=True)
+# plt.show()
