@@ -102,24 +102,30 @@ print("Missing values of each column:")
 missing_values = df.isnull().sum()
 print(missing_values)
 
+outliers_count = 0;
+
 # Check for outliers
 # Define detect_outliers function to calculate outliers using IQR
 def detect_outliers(column):
+    global outliers_count
     Q1 = column.quantile(0.25)
     Q3 = column.quantile(0.75)
     IQR = Q3 - Q1
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
     outliers = column[(column < lower_bound) | (column > upper_bound)]
+    outliers_count += len(outliers) # stores total # of outliers across all columns
     return outliers
 
+# List of numeric columns
+numeric_cols = ['Call  Failure', 'Subscription  Length', 'Seconds of Use', 'Frequency of use', 'Frequency of SMS', 'Distinct Called Numbers', 'Age', 'Customer Value']
 # Iterate over each column and calculate outliers using IQR
-for column in df.columns:
+for column in numeric_cols:
     outliers = detect_outliers(df[column])
     if not outliers.empty:
         print(f"Potential outliers in {column}:\n{outliers}\n")
 
-
+print(outliers_count)
 #CHECK CATEGORY VALUES & REMOVE ROWS THAT DO NOT MEET THE CONDITION
         
 # Complains should be either 0 or 1
@@ -198,8 +204,6 @@ print(df.columns)
 
 
 #Pearson Correlation for Numeric Columns
-# List of numeric columns
-numeric_cols = ['Call  Failure', 'Subscription  Length', 'Seconds of Use', 'Frequency of use', 'Frequency of SMS', 'Distinct Called Numbers', 'Age', 'Customer Value']
 
 # Create a new DataFrame that only includes the numeric columns
 numeric_df = df[numeric_cols]
