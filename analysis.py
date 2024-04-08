@@ -231,92 +231,108 @@ class Node:
         self.left = None
         self.right = None
 
-# Calculates the Gini impurity of the input array y. This represents the probability
-# of misclassifying a randomly chosen element in y if it were randomly labeled
-# according to the class distribution in y.
-def gini(y):
-    classes, counts = np.unique(y, return_counts=True)
-    proba = counts / len(y)
-    return 1 - np.sum(proba ** 2)
+class DecisionTree:
+    def __init__(self, max_depth):
+        self.max_depth = max_depth
+        self.root = None
 
-# return the subset of the X dataset of independant variables 
-#and the subset of the y dataset of the dependant variable split further into left or right
-# depending on if they meet the threshold condition for left and right
-def split(X, y, index, threshold):
-    left = np.where(X[:, index] < threshold)
-    right = np.where(X[:, index] >= threshold)
-    return X[left], X[right], y[left], y[right]
+    # Calculates the Gini impurity of the input array y. This represents the probability
+    # of misclassifying a randomly chosen element in y if it were randomly labeled
+    # according to the class distribution in y.
+    def gini_index(self, y):
+        classes, counts = np.unique(y, return_counts=True)
+        probability = counts / len(y)
+        return 1 - np.sum(probability ** 2)
 
-# returns the best feature/column's index and the best threshold value to split the node at
-# loops through all columns in the X dataset of independant variables and checks all unique values as candiate thresholds
-# whichever one has the best gini index becomes the feature and threshold for the node and therefore returns them
-def best_split(X, y):
-    best_index, best_threshold, best_gini = 0, 0, 1
-    for column_index in range(X.shape[1]):
-        thresholds = np.unique(X[:, column_index])
-        for threshold in thresholds:
-            X_left, X_right, y_left, y_right = split(X, y, column_index, threshold)
-            gini_left, gini_right = gini(y_left), gini(y_right)
-            gini_total = len(y_left) / len(y) * gini_left + len(y_right) / len(y) * gini_right
-            if gini_total < best_gini:
-                best_gini = gini_total
-                best_index = column_index
-                best_threshold = threshold
-    return best_index, best_threshold
+    # return the subset of the X dataset of independant variables 
+    # and the subset of the y dataset of the dependant variable split further into left or right
+    # depending on if they meet the threshold condition for left and right
+    def split_node(self, X, Y, col_index, threshold):
+        left_condition = X[:, col_index] < threshold
+        right_condition = X[:, col_index] >= threshold
+        left = np.where(left_condition)
+        right = np.where(right_condition)
+        return X[left], X[right], Y[left], Y[right]
 
-# Recursive function to build the decision tree that takes
-# a set of data that contains the independent variables (X)
-# the target variable (y)
-# the current depth of the tree (depth)
-# and the maximum depth of the tree (max_depth)
-def build_tree(X, y, depth=0, max_depth=5):
-    # find the unique class values for the dependant variable (churn) and return the counts for each class and the unique classes
-    classes, counts = np.unique(y, return_counts=True)
-    # If y is empty, return a node with no predicted class
-    if len(counts) == 0:
-        return Node(None)
-    # store the index of the class with the most counts in the predicted class and pass it to the new node object 
-    predicted_class = classes[np.argmax(counts)]
-    node = Node(predicted_class=predicted_class)
-    # check for max depth in each recursive call and stop building the tree when reached
-    if depth < max_depth:
-        index, threshold = best_split(X, y) # returns the best column/feature's index and threshold to split the node at
-        # check for a valid split
-        if index is not None:
-            # splits the node and stores the feature and threshold the node was split at as well as creates the left and right child nodes (sub trees)
-            X_left, X_right, y_left, y_right = split(X, y, index, threshold)
-            node.feature_index = index
-            node.threshold = threshold
-            node.left = build_tree(X_left, y_left, depth + 1, max_depth)
-            node.right = build_tree(X_right, y_right, depth + 1, max_depth)
-    return node
+    # returns the best feature/column's index and the best threshold value to split the node at
+    # loops through all columns in the X dataset of independant variables and checks all unique values as candiate thresholds
+    # whichever one has the best gini index becomes the feature and threshold for the node and therefore returns them
+    def find_best_split(self,X, Y):
+        best_index, best_threshold, best_gini = 0, 0, 1
+        for column_index in range(X.shape[1]):
+            thresholds = np.unique(X[:, column_index])
+            for threshold in thresholds:
+                X_left, X_right, y_left, y_right = self.split_node(X, Y, column_index, threshold)
+                gini_left, gini_right = self.gini_index(y_left), self.gini_index(y_right)
+                gini_total = len(y_left) / len(Y) * gini_left + len(y_right) / len(Y) * gini_right
+                if gini_total < best_gini:
+                    best_gini = gini_total
+                    best_index = column_index
+                    best_threshold = threshold
+        return best_index, best_threshold
 
-# predicts the class for each instance of x/sample in the test dataset
-def predict(node, X):
-    # Leaf node so it is pure enough and does not split further, return the predicted class
-    if node.left is None:
-        return node.predicted_class
-    # else check whether to go to the left child node or right child node to make a decision
-    if X[node.feature_index] < node.threshold:
-        return predict(node.left, X)
-    else:
-        return predict(node.right, X)
+    # Recursive function to build the decision tree that takes
+    # a set of data that contains the independent variables (X)
+    # the target variable (y)
+    # the current depth of the tree (depth)
+    # and the maximum depth of the tree (max_depth)
+    def build_tree(self, X, Y, depth=0):
+        # find the unique class values for the dependant variable (churn) and return the counts for each class and the unique classes
+        classes, counts = np.unique(Y, return_counts=True)
+        # If y is empty, return a node with no predicted class
+        if len(counts) == 0:
+            return Node(None)
+        # store the index of the class with the most counts in the predicted class and pass it to the new node object 
+        predicted_class = classes[np.argmax(counts)]
+        node = Node(predicted_class=predicted_class)
+        # check for max depth in each recursive call and stop building the tree when reached
+        if depth < self.max_depth:
+            index, threshold = self.find_best_split(X, Y) # returns the best column/feature's index and threshold to split the node at
+            # check for a valid split
+            if index is not None:
+                # splits the node and stores the feature and threshold the node was split at as well as creates the left and right child nodes (sub trees)
+                X_left, X_right, y_left, y_right = self.split_node(X, Y, index, threshold)
+                node.feature_index = index
+                node.threshold = threshold
+                node.left = self.build_tree(X_left, y_left, depth + 1)
+                node.right = self.build_tree(X_right, y_right, depth + 1)
+        return node
+    
+    def fit(self, X, Y):
+        self.root = self.build_tree(X, Y)
+
+    def predict(self, X):
+        return np.array([self.predict_node(self.root, x) for x in X])
+
+    # predicts the class for each instance of x/sample in the test dataset
+    def predict_node(self, node, X):
+        # Leaf node so it is pure enough and does not split further, return the predicted class
+        if node.left is None:
+            return node.predicted_class
+        # else check whether to go to the left child node or right child node to make a decision
+        if X[node.feature_index] < node.threshold:
+            return self.predict_node(node.left, X)
+        else:
+            return self.predict_node(node.right, X)
 
 # Split the dataset into features (X) and target (y)
 X = df.drop('Churn', axis=1).values
-y = df['Churn'].values
+Y = df['Churn'].values
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
 
 # Build the decision tree and limit to depth of 8 for optimal performance
-tree = build_tree(X_train, y_train, max_depth=8)
+tree = DecisionTree(max_depth=8)
+
+#train the model
+tree.fit(X_train, Y_train)
 
 # return the predictions for the test dataset in an array
-predictions = [predict(tree, x) for x in X_test]
+predictions = tree.predict(X_test)
 
 # takes the average of the predictions that match the actual values in the test dataset to calculate the accuracy
-accuracy = (predictions == y_test).mean()
+accuracy = (predictions == Y_test).mean()
 print(f'Accuracy: {accuracy}')
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -401,7 +417,7 @@ class LogisticRegression():
         return class_pred
 
 #--------------------------------------------------------------------------------
-Training of the Logistic Regression Model
+# Training of the Logistic Regression Model
 
 X, y = df.drop('Churn', axis=1).values, df['Churn'].values
 
