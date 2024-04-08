@@ -290,6 +290,52 @@ def t_test(model1_scores, model2_scores):
     return t_stat, p_value
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Confusion Matrix and Precision Metrics Calucation Classes
+
+import numpy as np
+
+def custom_confusion_matrix(y_true, y_pred, labels):
+    """
+    Custom implementation of confusion matrix
+    
+    Parameters:
+    - y_true (array-like): True labels
+    - y_pred (array-like): Predicted labels
+    - labels (list): List of unique labels in the dataset
+    
+    Returns:
+    - cm (numpy array): Confusion matrix
+    """
+    num_labels = len(labels)
+    cm = np.zeros((num_labels, num_labels), dtype=int)
+    
+    for true_label, pred_label in zip(y_true, y_pred):
+        cm[true_label, pred_label] += 1
+        
+    return cm
+
+def calculate_metrics(confusion_matrix):
+    # Calculates precision, recall, and F1 score from the results of the confusion matrix.
+
+    # Extract values from confusion matrix
+    TP = confusion_matrix[1, 1]
+    FP = confusion_matrix[0, 1]
+    FN = confusion_matrix[1, 0]
+
+    
+    # Calculate precision
+    precision = TP / (TP + FP)
+    
+    # Calculate recall
+    recall = TP / (TP + FN)
+    
+    # Calculate F1 score
+    f1_score = 2 * (precision * recall) / (precision + recall)
+    
+    return precision, recall, f1_score
+
+
 
 
 
@@ -427,6 +473,33 @@ print(f'Accuracy: {acc}', "%")
 k_fold_acc, tree_scores = k_fold(X, Y, tree, 5)
 
 print("k-fold accuracy: " , k_fold_acc, "%")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Calculating confusion matrix and precision metrics for decision tree algorithm
+
+# Compute confusion matrix
+# Ensure y_test and y_pred have the same length
+y_test = y_test[:len(y_pred)]
+
+
+# Compute confusion matrix
+custom_labels = np.unique(np.concatenate((y_test, y_pred)))
+custom_cm = custom_confusion_matrix(y_test, y_pred, labels=custom_labels)
+print("Custom Confusion Matrix:")
+print(custom_cm)
+
+# Compare with scikit-learn's confusion matrix
+sklearn_cm = confusion_matrix(y_test, y_pred)
+print("\nScikit-learn's Confusion Matrix:")
+print(sklearn_cm)
+
+
+#Caluclate metrics from confusion matrix
+precision, recall, f1_score = calculate_metrics(custom_cm)
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1 Score:", f1_score)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Logistic Regression Model
@@ -567,3 +640,31 @@ print(f'Accuracy: {accuracy}')
 
 # T-test
 t_test(tree_scores, log_scores)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Compute confusion matrix
+# Ensure y_test and y_pred have the same length
+y_test = y_test[:len(y_pred)]
+
+
+# Compute confusion matrix
+custom_labels = np.unique(np.concatenate((y_test, y_pred)))
+custom_cm = custom_confusion_matrix(y_test, y_pred, labels=custom_labels)
+print("Custom Confusion Matrix for Random Forest:")
+print(custom_cm)
+
+# Compare with scikit-learn's confusion matrix
+sklearn_cm = confusion_matrix(y_test, y_pred)
+print("\nScikit-learn's Confusion Matrix for Random Forest:")
+print(sklearn_cm)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#Caluclate metrics from confusion matrix and precision metrics for decision tree algorithm
+
+precision, recall, f1_score = calculate_metrics(custom_cm)
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1 Score:", f1_score)
