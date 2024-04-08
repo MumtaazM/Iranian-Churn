@@ -215,6 +215,69 @@ for col in numeric_cols:
 
 #Results are extremely low, since the data is skewed and not linearly related it might be inappropriate to use Pearson correlation without transforming the data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Accuracy
+def accuracy(y_pred, y_test):
+    return (np.sum(y_pred==y_test)/len(y_test))*100
+
+
+# K-Fold cross validation
+
+def k_fold(X, Y, model, k):
+    # shuffle the indices so we take random samples each time
+    # only using one set of data (y) so that the indices correspond
+    # to the same values for both x and y
+    indices = np.random.permutation(len(Y))
+    mixedX = X[indices]
+    mixedY = Y[indices]
+
+    # Split dataset into k subsets
+    # subset_size = len(Y) // k
+    # subsetsX = []
+    # subsetsY = []
+
+    # add all subsets to the larger subsets array
+    # for i in range(k):
+    #     subsetX = mixedX[i*subset_size:(i+1)*subset_size]
+    #     subsetY = mixedY[i*subset_size:(i+1)*subset_size]
+
+    #     subsetsX = np.concatenate(subsetX)
+    #     subsetsY = np.concatenate(subsetY)
+
+    # split x and y into k subsets
+    subsetsX = np.array_split(mixedX, k)
+    subsetsY = np.array_split(mixedY, k)
+
+    # pick one subset in the subsets array for validation
+    # merge the rest and use for training, do this k times
+    scores = []
+    for i in range(k):
+        # Pick a different subset for validation each loop
+        validationX = subsetsX[i]
+        validationY = subsetsY[i]
+
+        # Use the rest for training
+        trainX = np.concatenate([subset for j, subset in enumerate(subsetsX) if j != i])
+        trainY = np.concatenate([subset for j, subset in enumerate(subsetsY) if j != i])
+
+        #train the model
+        model.fit(trainX, trainY)
+        y_pred = model.predict(validationX)
+
+        # test for accuracy
+        acc = accuracy(y_pred, validationY)
+        scores.append(acc)
+
+    #calculate average accuray scores and return
+    average_score = np.mean(scores)
+    return average_score
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ROC curce and AUC
+
+def roc_curve(y_score, y_true):
+    # Sort predictions
+    sorted_scores = y_score
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # DECISION TREE
 
@@ -314,6 +377,9 @@ class DecisionTree:
             return self.predict_node(node.left, X)
         else:
             return self.predict_node(node.right, X)
+        
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Training the Decision Tree
 
 # Split the dataset into features (X) and target (y)
 X = df.drop('Churn', axis=1).values
@@ -332,42 +398,12 @@ tree.fit(X_train, Y_train)
 predictions = tree.predict(X_test)
 
 # takes the average of the predictions that match the actual values in the test dataset to calculate the accuracy
-accuracy = (predictions == Y_test).mean()
-print(f'Accuracy: {accuracy}')
+acc = accuracy(predictions, Y_test)
+print(f'Accuracy: {acc}', "%")
+
+print("k-fold accuracy: " , k_fold(X, Y, tree, 5), "%")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# # Split the dataset into features (X) and target (y)
-# X = df.drop('Churn', axis=1)
-# y = df['Churn']
-
-# # Split the data into training and testing sets
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-# # Model Training
-# # Initialize the decision tree classifier
-# clf = DecisionTreeClassifier(max_depth=8, random_state=42)
-
-# # Train the decision tree model
-# clf.fit(X_train, y_train)
-
-# # Make predictions on the testing set
-# y_pred = clf.predict(X_test)
-
-# # Evaluate the model
-# print("Accuracy:", accuracy_score(y_test, y_pred))
-# print("Classification Report:")
-# print(classification_report(y_test, y_pred))
-# print("Confusion Matrix:")
-# print(confusion_matrix(y_test, y_pred))
-
-# # Visualize the decision tree
-# plt.figure(figsize=(20,10))
-# plot_tree(clf, feature_names=X.columns, class_names=['Not Churn', 'Churn'], filled=True, rounded=True)
-# plt.show()
-
-
-#-------------------------------------------------------------------------------------------
 # Logistic Regression Model
 
 import numpy as np
@@ -427,8 +463,10 @@ clf = LogisticRegression(lr=0.01)
 clf.fit(X_train,y_train)
 y_pred = clf.predict(X_test)
 
-def accuracy(y_pred, y_test):
-    return (np.sum(y_pred==y_test)/len(y_test))*100
-
 acc = accuracy(y_pred, y_test)
 print("Accuracy of the logistic regression model is = ", round(acc,2), "%")
+
+print("k-fold accuracy: " , k_fold(X, y, clf, 5), "%")
+
+
+
