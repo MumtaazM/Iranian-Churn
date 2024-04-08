@@ -405,68 +405,83 @@ print("k-fold accuracy: " , k_fold(X, Y, tree, 5), "%")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Logistic Regression Model
-
 import numpy as np
 
-def sigmoid(x):
-    return 1/(1 + np.exp(-x))
-
-class LogisticRegression():
-    # learning rate is lr and number of iterations is n_iters and their respective values.
-    def __init__(self, lr=0.0015, n_iters=1000):
-        self.lr = lr
-        self.n_iters = n_iters
+class CustomLogisticRegression:
+    def __init__(self, learning_rate=0.015, num_iterations=1000):
+        self.learning_rate = learning_rate
+        self.num_iterations = num_iterations
         self.weights = None
         self.bias = None
         self.cost_list = []
-
+        
+    def sigmoid(self, z):
+        return 1 / (1 + np.exp(-z))
+    
     def fit(self, X, y):
-        n_samples, n_features = X.shape
-        self.weights = np.zeros(n_features)
+        # Initialize weights and bias
+        num_samples, num_features = X.shape
+        self.weights = np.zeros(num_features)
         self.bias = 0
-       
-        for _ in range(self.n_iters):
-            linear_pred = np.dot(X, self.weights) + self.bias
-            predictions = sigmoid(linear_pred)
+        
+        # Gradient descent
+        for _ in range(self.num_iterations):
             
-            # Gradient Descent ( find maximum limit)
-            dw = (1/n_samples) * np.dot(X.T, (predictions - y))
-            db = (1/n_samples) * np.sum(predictions-y)
-
-            self.weights = self.weights - self.lr*dw
-            self.bias = self.bias - self.lr*db
-
-            # Keep track of our cost function value
-            # cost function
-            cost = -(1/n_samples)*np.sum(y * np.log(predictions) + (1 - y) * np.log(1 - predictions))
+            # Linear model
+            linear_model = np.dot(X, self.weights) + self.bias
             
+            # Predictions using sigmoid function ( also known as z
+            y_predicted = self.sigmoid(linear_model)
+
+            # calculate cost (error rate) using cost function
+            cost = -(1/num_samples)*np.sum(y*np.log(y_predicted) + (1 - y)*np.log(1 - y_predicted))
+            
+            # Compute gradients
+            dw = (1 / num_samples) * np.dot(X.T, (y_predicted - y))
+            db = (1 / num_samples) * np.sum(y_predicted - y)
+            
+            # Update parameters
+            self.weights -= self.learning_rate * dw
+            self.bias -= self.learning_rate * db
+
             self.cost_list.append(cost)
 
-            if((_%(self.n_iters)/10) == 0):
-                print("cost after",_, "iteration is: ", cost)
-
-
+            # keep track of our cost fucntion value
+           
+           
+            print("cost after",_, "iteration is: ", cost)
+    
+    
     def predict(self, X):
-        linear_pred = np.dot(X, self.weights) + self.bias
-        y_pred = sigmoid(linear_pred)
-        class_pred = [0 if y<=0.5 else 1 for y in y_pred]
-        return class_pred
+        linear_model = np.dot(X, self.weights) + self.bias
+        y_predicted = self.sigmoid(linear_model)
+        y_predicted = y_predicted > 0.5
+        return  y_predicted
+
 
 #--------------------------------------------------------------------------------
 # Training of the Logistic Regression Model
 
+# Split the data into training and testing sets
 X, y = df.drop('Churn', axis=1).values, df['Churn'].values
-
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1234)
 
-clf = LogisticRegression(lr=0.01)
-clf.fit(X_train,y_train)
-y_pred = clf.predict(X_test)
+# Standardize features by removing the mean and scaling to unit variance
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Initialize and train the custom logistic regression model
+model = CustomLogisticRegression()
+model.fit(X_train_scaled, y_train)
+
+# Make predictions
+y_pred = model.predict(X_test_scaled)
 
 acc = accuracy(y_pred, y_test)
 print("Accuracy of the logistic regression model is = ", round(acc,2), "%")
 
-print("k-fold accuracy: " , k_fold(X, y, clf, 5), "%")
+print("k-fold accuracy: " , k_fold(X, y, model, 5), "%")
 
 
 
