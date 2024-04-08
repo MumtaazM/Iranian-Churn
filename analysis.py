@@ -509,8 +509,61 @@ print("Accuracy of the logistic regression model is = ", round(acc,2), "%")
 k_fold_acc, log_scores = k_fold(X, y, model, 5)
 
 print("k-fold accuracy: " , k_fold_acc, "%")
+#--------------------------------------------------------------------------------------
+# Random Forest Algorithm
+            
+import numpy as np
 
-print("\n",tree_scores)
-print("\n",log_scores)
+class RandomForest:
+    def __init__(self, num_trees=10, max_depth=None):
+        self.num_trees = num_trees
+        self.max_depth = max_depth
+        self.trees = []
+        
+    def fit(self, X, y):
+        for _ in range(self.num_trees):
+            # Bootstrap sample for each tree
+            indices = np.random.choice(len(X), size=len(X), replace=True)
+            X_bootstrap = X[indices]
+            y_bootstrap = y[indices]
+            
+            # Create a decision tree and fit on the bootstrap sample
+            tree = DecisionTree(max_depth=self.max_depth)
+            tree.fit(X_bootstrap, y_bootstrap)
+            
+            # Append the tree to the forest
+            self.trees.append(tree)
+    
+    def predict(self, X):
+        # Make predictions with each tree
+        predictions = np.array([tree.predict(X) for tree in self.trees])
+        # Aggregate predictions using majority voting
+        aggregated_predictions = np.apply_along_axis(lambda x: np.bincount(x).argmax(), axis=0, arr=predictions)
+        return aggregated_predictions
 
+#--------------------------------------------------------------------------------------
+# Random Forest Usage
+# Split the dataset into features (X) and target (y)
+X = df.drop('Churn', axis=1).values
+y = df['Churn'].values
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Build the random forest
+forest = RandomForest(num_trees=10, max_depth=2)
+
+# Train the random forest
+forest.fit(X_train, y_train)
+
+# Predict using the random forest
+predictions = forest.predict(X_test)
+
+# Calculate accuracy
+accuracy = (predictions == y_test).mean()
+print(f'Accuracy: {accuracy}')
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# T-test
 t_test(tree_scores, log_scores)
