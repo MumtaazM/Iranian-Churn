@@ -1,4 +1,5 @@
 import pandas as pd
+from scipy import stats
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
@@ -231,19 +232,6 @@ def k_fold(X, Y, model, k):
     mixedX = X[indices]
     mixedY = Y[indices]
 
-    # Split dataset into k subsets
-    # subset_size = len(Y) // k
-    # subsetsX = []
-    # subsetsY = []
-
-    # add all subsets to the larger subsets array
-    # for i in range(k):
-    #     subsetX = mixedX[i*subset_size:(i+1)*subset_size]
-    #     subsetY = mixedY[i*subset_size:(i+1)*subset_size]
-
-    #     subsetsX = np.concatenate(subsetX)
-    #     subsetsY = np.concatenate(subsetY)
-
     # split x and y into k subsets
     subsetsX = np.array_split(mixedX, k)
     subsetsY = np.array_split(mixedY, k)
@@ -270,14 +258,42 @@ def k_fold(X, Y, model, k):
 
     #calculate average accuray scores and return
     average_score = np.mean(scores)
-    return average_score
+    return average_score, scores
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ROC curce and AUC
+# T test (compare the models)
 
-def roc_curve(y_score, y_true):
-    # Sort predictions
-    sorted_scores = y_score
+def t_test(model1_scores, model2_scores):
+    diff = np.array(model1_scores) - np.array(model2_scores)
+
+    # Calculate mean difference between both models
+    mean_diff = np.mean(diff)
+    
+    # Calculate standard error of the mean difference
+    standard_error = np.std(diff, ddof=1) / np.sqrt(len(diff))
+    
+    # Calculate t-statistic
+    t_stat = mean_diff / standard_error
+
+    df = len(diff) - 1
+
+    # Calculate p-value (two-tailed)
+    p_value = 2 * (1 - stats.t.cdf(abs(t_stat), df))
+
+    alpha = 0.05  # Significance level
+
+    if p_value >= alpha:
+        print("There is a significant difference between the performance of the two models")
+    else:
+        print("There is no significant difference between the performance of the two models")
+
+    return t_stat, p_value
+
+
+
+
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # DECISION TREE
@@ -294,6 +310,11 @@ class Node:
         self.threshold = None
         self.left = None
         self.right = None
+
+    # Add an indented block of code here if needed
+    def something():
+        return 1
+    
 
 class DecisionTree:
     def __init__(self, max_depth):
@@ -373,6 +394,7 @@ class DecisionTree:
         # Leaf node so it is pure enough and does not split further, return the predicted class
         if node.left is None:
             return node.predicted_class
+        
         # else check whether to go to the left child node or right child node to make a decision
         if X[node.feature_index] < node.threshold:
             return self.predict_node(node.left, X)
@@ -402,11 +424,13 @@ predictions = tree.predict(X_test)
 acc = accuracy(predictions, Y_test)
 print(f'Accuracy: {acc}', "%")
 
-print("k-fold accuracy: " , k_fold(X, Y, tree, 5), "%")
+k_fold_acc, tree_scores = k_fold(X, Y, tree, 5)
+
+print("k-fold accuracy: " , k_fold_acc, "%")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Logistic Regression Model
-import numpy as np
+
 
 class CustomLogisticRegression:
     def __init__(self, learning_rate=0.015, num_iterations=1000):
@@ -450,7 +474,7 @@ class CustomLogisticRegression:
             # keep track of our cost fucntion value
            
            
-            print("cost after",_, "iteration is: ", cost)
+            # print("cost after",_, "iteration is: ", cost)
     
     
     def predict(self, X):
@@ -482,7 +506,11 @@ y_pred = model.predict(X_test_scaled)
 acc = accuracy(y_pred, y_test)
 print("Accuracy of the logistic regression model is = ", round(acc,2), "%")
 
-print("k-fold accuracy: " , k_fold(X, y, model, 5), "%")
+k_fold_acc, log_scores = k_fold(X, y, model, 5)
 
+print("k-fold accuracy: " , k_fold_acc, "%")
 
+print("\n",tree_scores)
+print("\n",log_scores)
 
+t_test(tree_scores, log_scores)
