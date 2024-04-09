@@ -50,51 +50,51 @@ print(std_devs)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 print("\nBOXPLOT AND HISTOGRAMS")
 
-# # GRAPHS
+# GRAPHS
 
-# # BOXPLOTS
-# # Set the figure size and style
-# plt.figure(figsize=(12, 6))
-# sns.set(style="whitegrid")
+# BOXPLOTS
+# Set the figure size and style
+plt.figure(figsize=(12, 6))
+sns.set(style="whitegrid")
 
-# # Create the boxplot
-# ax = sns.boxplot(data=df.select_dtypes(include='number'))
+# Create the boxplot
+ax = sns.boxplot(data=df.select_dtypes(include='number'))
 
-# # Rotate the x-axis labels
-# ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+# Rotate the x-axis labels
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
 
-# # Set title and show plot
-# plt.title('Boxplot of Numerical Variables')
-# plt.tight_layout()  # Adjust layout to prevent clipping
-# plt.show()
-
-
-# # HISTOGRAMS
-# # Plot histogram for the dataset
-# plt.figure(figsize=(12, 8))  # Set the figure size
-
-# for column in df.columns:
-#     plt.hist(df[column], bins=20, alpha=0.7, label=column)
-
-# plt.xlabel('Values')  # Set the x-axis label
-# plt.ylabel('Frequency')  # Set the y-axis label
-# plt.title('Histogram of Each Variable')  # Set the title
-# plt.legend()  # Show legend with variable names
-# plt.grid(True)  # Add gridlines
-# plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
-# plt.tight_layout()  # Adjust layout to prevent overlapping
-# plt.show()  # Show the plot
+# Set title and show plot
+plt.title('Boxplot of Numerical Variables')
+plt.tight_layout()  # Adjust layout to prevent clipping
+plt.show()
 
 
-# # Plot histogram for each variable in the dataset
-# for column in df.columns:
-#     plt.figure(figsize=(8, 6))  # Set the figure size
-#     plt.hist(df[column], bins=20, color='skyblue', edgecolor='black')  # Plot histogram
-#     plt.xlabel('Values')  # Set the x-axis label
-#     plt.ylabel('Frequency')  # Set the y-axis label
-#     plt.title(f'Histogram of {column}')  # Set the title with variable name
-#     plt.grid(True)  # Add gridlines
-#     plt.show()  # Show the plot
+# HISTOGRAMS
+# Plot histogram for the dataset
+plt.figure(figsize=(12, 8))  # Set the figure size
+
+for column in df.columns:
+    plt.hist(df[column], bins=20, alpha=0.7, label=column)
+
+plt.xlabel('Values')  # Set the x-axis label
+plt.ylabel('Frequency')  # Set the y-axis label
+plt.title('Histogram of Each Variable')  # Set the title
+plt.legend()  # Show legend with variable names
+plt.grid(True)  # Add gridlines
+plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
+plt.tight_layout()  # Adjust layout to prevent overlapping
+plt.show()  # Show the plot
+
+
+# Plot histogram for each variable in the dataset
+for column in df.columns:
+    plt.figure(figsize=(8, 6))  # Set the figure size
+    plt.hist(df[column], bins=20, color='skyblue', edgecolor='black')  # Plot histogram
+    plt.xlabel('Values')  # Set the x-axis label
+    plt.ylabel('Frequency')  # Set the y-axis label
+    plt.title(f'Histogram of {column}')  # Set the title with variable name
+    plt.grid(True)  # Add gridlines
+    plt.show()  # Show the plot
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # CLEANING DATA
