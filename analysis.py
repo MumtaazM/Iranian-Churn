@@ -679,7 +679,7 @@ print(sklearn_cm)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#Caluclate metrics from confusion matrix and precision metrics for decision tree algorithm
+#Caluclate metrics from confusion matrix and precision metrics for forest tree algorithm
 precision, recall, f1_score = calculate_metrics(custom_cm)
 print("Precision:", precision)
 print("Recall:", recall)
