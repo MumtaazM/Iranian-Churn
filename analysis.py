@@ -352,9 +352,10 @@ class Node:
         return 1
     
 class DecisionTree:
-    def __init__(self, max_depth):
+    def __init__(self, col_names, max_depth):
         self.max_depth = max_depth
         self.root = None
+        self.column_names = col_names
 
     # Calculates the Gini impurity of the input array y. This represents the probability
     # of misclassifying a randomly chosen element in y if it were randomly labeled
@@ -420,6 +421,20 @@ class DecisionTree:
     
     def fit(self, X, Y):
         self.root = self.build_tree(X, Y)
+        self.feature_importance = self.calculate_feature_importance(X)
+
+    def calculate_feature_importance(self, X):
+        feature_counts = np.zeros(X.shape[1])
+        self._count_splits(self.root, feature_counts)
+        return feature_counts / np.sum(feature_counts)
+
+    def _count_splits(self, node, feature_counts):
+        if node is None:
+            return
+        if node.left is not None:
+            feature_counts[node.feature_index] += 1
+            self._count_splits(node.left, feature_counts)
+            self._count_splits(node.right, feature_counts)
 
     def predict(self, X):
         return np.array([self.predict_node(self.root, x) for x in X])
@@ -442,14 +457,16 @@ class DecisionTree:
 print("\nDECISION TREE")
 
 # Split the dataset into features (X) and target (y)
-X = df.drop('Churn', axis=1).values
+X = df.drop('Churn', axis=1)
+col_names = X.columns
+X = X.values
 Y = df['Churn'].values
 
 # Split the data into training and testing sets
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
 
 # Build the decision tree and limit to depth of 8 for optimal performance
-tree = DecisionTree(max_depth=8)
+tree = DecisionTree(col_names, max_depth=8)
 
 #train the model
 tree.fit(X_train, Y_train)
@@ -485,6 +502,14 @@ precision, recall, f1_score = calculate_metrics(custom_cm)
 print("Precision:", precision)
 print("Recall:", recall)
 print("F1 Score:", f1_score)
+
+# Extract the feature importance score
+# Accessing feature importance scores
+importance_scores = tree.feature_importance
+
+# Printing feature importance scores
+for i, score in enumerate(importance_scores):
+    print(f"Feature '{tree.column_names[i]}': Importance Score = {score}")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Logistic Regression Model
@@ -583,7 +608,7 @@ class RandomForest:
             y_bootstrap = y[indices]
             
             # Create a decision tree and fit on the bootstrap sample
-            tree = DecisionTree(max_depth=self.max_depth)
+            tree = DecisionTree(col_names, max_depth=self.max_depth)
             tree.fit(X_bootstrap, y_bootstrap)
             
             # Append the tree to the forest
