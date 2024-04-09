@@ -18,7 +18,7 @@ pd.set_option("display.max_columns", None)
 df = pd.read_csv('Customer Churn.csv')
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+print("\nDESCRIPTIVE STATISTICS")
 # DESCRIPTIVE STATISTICS
 numerical_summary = df.describe()
 print(numerical_summary)
@@ -48,7 +48,7 @@ print("Standard deviation of each column:")
 print(std_devs)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+print("\nBOXPLOT AND HISTOGRAMS")
 
 # # GRAPHS
 
@@ -98,14 +98,14 @@ print(std_devs)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # CLEANING DATA
+print("\nDATA CLEANING")
 
 # Check for missing values
 print("Missing values of each column:")
 missing_values = df.isnull().sum()
-print(missing_values)
+print("\n",missing_values)
 
 outliers_count = 0;
-
 # Check for outliers
 # Define detect_outliers function to calculate outliers using IQR
 def detect_outliers(column):
@@ -127,7 +127,8 @@ for column in numeric_cols:
     if not outliers.empty:
         print(f"Potential outliers in {column}:\n{outliers}\n")
 
-print(outliers_count)
+print("\n", outliers_count)
+
 #CHECK CATEGORY VALUES & REMOVE ROWS THAT DO NOT MEET THE CONDITION
         
 # Complains should be either 0 or 1
@@ -184,6 +185,7 @@ df = pd.DataFrame(filtered_df)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #CORRELATION ANALYSIS
+print("\nCORRELATION ANALYSIS")
 
 #Chi-Square Test for Categorical Columns
 # Extract the columns
@@ -202,11 +204,7 @@ for col in categorical_cols:
     print(f"Degrees of freedom: {dof}")
     print(f"Expected contingency table: {expected}\n")
 
-print(df.columns)
-
-
 #Pearson Correlation for Numeric Columns
-
 # Create a new DataFrame that only includes the numeric columns
 numeric_df = df[numeric_cols]
 
@@ -217,13 +215,13 @@ for col in numeric_cols:
 
 #Results are extremely low, since the data is skewed and not linearly related it might be inappropriate to use Pearson correlation without transforming the data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# EVALUTATION METHODS
+
 # Accuracy
 def accuracy(y_pred, y_test):
     return (np.sum(y_pred==y_test)/len(y_test))*100
 
-
 # K-Fold cross validation
-
 def k_fold(X, Y, model, k):
     # shuffle the indices so we take random samples each time
     # only using one set of data (y) so that the indices correspond
@@ -260,7 +258,6 @@ def k_fold(X, Y, model, k):
     average_score = np.mean(scores)
     return average_score, scores
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # T test (compare the models)
 
 def t_test(model1_scores, model2_scores):
@@ -289,11 +286,7 @@ def t_test(model1_scores, model2_scores):
 
     return t_stat, p_value
 
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Confusion Matrix and Precision Metrics Calucation Classes
-
-import numpy as np
 
 def custom_confusion_matrix(y_true, y_pred, labels):
     """
@@ -335,11 +328,6 @@ def calculate_metrics(confusion_matrix):
     
     return precision, recall, f1_score
 
-
-
-
-
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # DECISION TREE
@@ -361,7 +349,6 @@ class Node:
     def something():
         return 1
     
-
 class DecisionTree:
     def __init__(self, max_depth):
         self.max_depth = max_depth
@@ -450,6 +437,8 @@ class DecisionTree:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Training the Decision Tree
 
+print("\nDECISION TREE")
+
 # Split the dataset into features (X) and target (y)
 X = df.drop('Churn', axis=1).values
 Y = df['Churn'].values
@@ -464,24 +453,20 @@ tree = DecisionTree(max_depth=8)
 tree.fit(X_train, Y_train)
 
 # return the predictions for the test dataset in an array
-predictions = tree.predict(X_test)
+y_pred = tree.predict(X_test)
 
 # takes the average of the predictions that match the actual values in the test dataset to calculate the accuracy
-acc = accuracy(predictions, Y_test)
+acc = accuracy(y_pred, Y_test)
 print(f'Accuracy: {acc}', "%")
 
 k_fold_acc, tree_scores = k_fold(X, Y, tree, 5)
-
 print("k-fold accuracy: " , k_fold_acc, "%")
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Calculating confusion matrix and precision metrics for decision tree algorithm
 
 # Compute confusion matrix
 # Ensure y_test and y_pred have the same length
-y_test = y_test[:len(y_pred)]
-
+y_test = Y_test[:len(y_pred)]
 
 # Compute confusion matrix
 custom_labels = np.unique(np.concatenate((y_test, y_pred)))
@@ -494,7 +479,6 @@ sklearn_cm = confusion_matrix(y_test, y_pred)
 print("\nScikit-learn's Confusion Matrix:")
 print(sklearn_cm)
 
-
 #Caluclate metrics from confusion matrix
 precision, recall, f1_score = calculate_metrics(custom_cm)
 print("Precision:", precision)
@@ -503,7 +487,6 @@ print("F1 Score:", f1_score)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Logistic Regression Model
-
 
 class CustomLogisticRegression:
     def __init__(self, learning_rate=0.015, num_iterations=1000):
@@ -559,6 +542,7 @@ class CustomLogisticRegression:
 
 #--------------------------------------------------------------------------------
 # Training of the Logistic Regression Model
+print("\n=LOGISTIC REGRESSION")
 
 # Split the data into training and testing sets
 X, y = df.drop('Churn', axis=1).values, df['Churn'].values
@@ -580,13 +564,10 @@ acc = accuracy(y_pred, y_test)
 print("Accuracy of the logistic regression model is = ", round(acc,2), "%")
 
 k_fold_acc, log_scores = k_fold(X, y, model, 5)
-
 print("k-fold accuracy: " , k_fold_acc, "%")
 #--------------------------------------------------------------------------------------
 # Random Forest Algorithm
             
-import numpy as np
-
 class RandomForest:
     def __init__(self, num_trees=10, max_depth=None):
         self.num_trees = num_trees
@@ -616,6 +597,7 @@ class RandomForest:
 
 #--------------------------------------------------------------------------------------
 # Random Forest Usage
+print("\nRANDOM FOREST")
 # Split the dataset into features (X) and target (y)
 X = df.drop('Churn', axis=1).values
 y = df['Churn'].values
@@ -630,17 +612,25 @@ forest = RandomForest(num_trees=10, max_depth=2)
 forest.fit(X_train, y_train)
 
 # Predict using the random forest
-predictions = forest.predict(X_test)
+y_pred = forest.predict(X_test)
 
 # Calculate accuracy
-accuracy = (predictions == y_test).mean()
+accuracy = (y_pred == y_test).mean()
 print(f'Accuracy: {accuracy}')
+
+# K-fold cross validation
+k_fold_acc, rf_scores = k_fold(X, y, forest, 5)
+print("k-fold accuracy: " , k_fold_acc, "%")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # T-test
+print("\nT-test of tree against log")
 t_test(tree_scores, log_scores)
-
+print("\nT-test of tree against random forest")
+t_test(tree_scores, rf_scores)
+print("\nT-test of log against random forest")
+t_test(log_scores, rf_scores)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -648,11 +638,10 @@ t_test(tree_scores, log_scores)
 # Ensure y_test and y_pred have the same length
 y_test = y_test[:len(y_pred)]
 
-
 # Compute confusion matrix
 custom_labels = np.unique(np.concatenate((y_test, y_pred)))
 custom_cm = custom_confusion_matrix(y_test, y_pred, labels=custom_labels)
-print("Custom Confusion Matrix for Random Forest:")
+print("\nCustom Confusion Matrix for Random Forest:")
 print(custom_cm)
 
 # Compare with scikit-learn's confusion matrix
@@ -663,7 +652,6 @@ print(sklearn_cm)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #Caluclate metrics from confusion matrix and precision metrics for decision tree algorithm
-
 precision, recall, f1_score = calculate_metrics(custom_cm)
 print("Precision:", precision)
 print("Recall:", recall)
