@@ -684,3 +684,17 @@ precision, recall, f1_score = calculate_metrics(custom_cm)
 print("Precision:", precision)
 print("Recall:", recall)
 print("F1 Score:", f1_score)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# plot the confusion matrix as a heat map
+
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.imshow(custom_cm)
+ax.grid(False)
+ax.xaxis.set(ticks=(0, 1), ticklabels=('Predicted 0s', 'Predicted 1s'))
+ax.yaxis.set(ticks=(0, 1), ticklabels=('Actual 0s', 'Actual 1s'))
+ax.set_ylim(1.5, -0.5)
+for i in range(2):
+    for j in range(2):
+        ax.text(j, i, custom_cm[i, j], ha='center', va='center', color='red')
+plt.show()
