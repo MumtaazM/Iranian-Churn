@@ -508,6 +508,22 @@ importance_scores = tree.feature_importance
 for i, score in enumerate(importance_scores):
     print(f"Feature '{tree.column_names[i]}': Importance Score = {score}")
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# heatmap of confusion matrix for dt algorithm
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Assuming 'cm' is your confusion matrix
+# Replace 'cm' with your actual confusion matrix
+
+# Plot heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(custom_cm, annot=True, cmap='Blues', fmt='g')
+plt.title('Confusion Matrix Heatmap')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.show()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Logistic Regression Model
 
@@ -588,6 +604,21 @@ print("Accuracy of the logistic regression model is = ", round(acc,2), "%")
 
 k_fold_acc, log_scores = k_fold(X, y, model, 5)
 print("k-fold accuracy: " , k_fold_acc, "%")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# graph of predictions against actual values
+
+import matplotlib.pyplot as plt
+
+# Plot the actual vs predicted values
+plt.figure(figsize=(8, 6))
+plt.scatter(y_test, y_pred, color='blue', alpha=0.5)
+plt.plot([y_test.min(), y_test.max()], [y_pred.min(), y_pred.max()], color='red', linestyle='--', linewidth=2)  # Add a diagonal line for comparison
+plt.title('Actual vs Predicted Values')
+plt.xlabel('Actual Values')
+plt.ylabel('Predicted Values')
+plt.grid(True)
+plt.show()
 #--------------------------------------------------------------------------------------
 # Random Forest Algorithm
             
