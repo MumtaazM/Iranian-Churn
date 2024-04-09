@@ -684,3 +684,20 @@ precision, recall, f1_score = calculate_metrics(custom_cm)
 print("Precision:", precision)
 print("Recall:", recall)
 print("F1 Score:", f1_score)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# plot the confusion matrix as a heat map
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Assuming 'cm' is your confusion matrix
+# Replace 'cm' with your actual confusion matrix
+
+# Plot heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(custom_cm, annot=True, cmap='Blues', fmt='g')
+plt.title('Confusion Matrix Heatmap')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.show()
