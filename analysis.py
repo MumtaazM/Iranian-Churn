@@ -289,6 +289,8 @@ def t_test(model1_scores, model2_scores):
 # Confusion Matrix and Precision Metrics Calucation Classes
 
 def custom_confusion_matrix(y_true, y_pred, labels):
+    # print(y_true, "\n")
+    # print(y_pred, "\n")
     """
     Custom implementation of confusion matrix
     
@@ -399,7 +401,7 @@ class DecisionTree:
         classes, counts = np.unique(Y, return_counts=True)
         # If y is empty, return a node with no predicted class
         if len(counts) == 0:
-            return Node(None)
+            return None
         # store the index of the class with the most counts in the predicted class and pass it to the new node object 
         predicted_class = classes[np.argmax(counts)]
         node = Node(predicted_class=predicted_class)
@@ -463,7 +465,6 @@ k_fold_acc, tree_scores = k_fold(X, Y, tree, 5)
 print("k-fold accuracy: " , k_fold_acc, "%")
 
 # Calculating confusion matrix and precision metrics for decision tree algorithm
-
 # Compute confusion matrix
 # Ensure y_test and y_pred have the same length
 y_test = Y_test[:len(y_pred)]
@@ -614,9 +615,11 @@ forest.fit(X_train, y_train)
 # Predict using the random forest
 y_pred = forest.predict(X_test)
 
+print(y_pred)
+
 # Calculate accuracy
-accuracy = (y_pred == y_test).mean()
-print(f'Accuracy: {accuracy}')
+acc = (y_pred == y_test).mean()
+print(f'Accuracy: {acc}')
 
 # K-fold cross validation
 k_fold_acc, rf_scores = k_fold(X, y, forest, 5)
